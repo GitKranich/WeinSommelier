@@ -2074,6 +2074,17 @@ def vivino_search():
     if len(query) < 2:
         return jsonify({"ok": False, "error": "query_too_short"}), 400
 
+    # Ask Vivino for prices in the currency configured in the add-on
+    # (e.g. EUR -> German shop prices in EUR) instead of its default.
+    country_code, currency_code = _vivino_country_code(
+        load_options().get("currency", "CHF"))
+
+    def _explore_params(term):
+        return {
+            "language": "en", "min_rating": 1, "search_term": term,
+            "country_code": country_code, "currency_code": currency_code,
+        }
+
     ssl_verify = _ssl_verify()
     session = req.Session()
     session.headers.update(_VIVINO_HEADERS)
@@ -2087,7 +2098,7 @@ def vivino_search():
     try:
         resp = session.get(
             _VIVINO_EXPLORE_URL,
-            params={"language": "en", "min_rating": 1, "search_term": query},
+            params=_explore_params(query),
             headers={"Accept": "application/json"},
             timeout=10,
             verify=ssl_verify,
@@ -2119,7 +2130,7 @@ def vivino_search():
             try:
                 r2 = session.get(
                     _VIVINO_EXPLORE_URL,
-                    params={"language": "en", "min_rating": 1, "search_term": shorter},
+                    params=_explore_params(shorter),
                     headers={"Accept": "application/json"},
                     timeout=10,
                     verify=ssl_verify,
@@ -2150,6 +2161,12 @@ def vivino_search():
 
             price_obj = match.get("price", {}) or {}
             price_val = price_obj.get("amount")
+            # Drop prices Vivino still returns in another currency, so a
+            # USD amount never lands in the cellar as if it were EUR.
+            price_cur = (price_obj.get("currency") or {}).get("code") \
+                if isinstance(price_obj.get("currency"), dict) else None
+            if price_cur and price_cur.upper() != currency_code:
+                price_val = None
 
             wine_type_id = wine.get("type_id")
             wine_type = VIVINO_WINE_TYPES.get(wine_type_id, "Anderes") if wine_type_id else ""

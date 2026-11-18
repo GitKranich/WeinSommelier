@@ -1,6 +1,6 @@
 name: "WeinSommelier"
 description: "Weinkeller verwalten (basiert auf Wine Tracker von xenofex7)"
-version: "1.11.0"
+version: "1.11.1"
 slug: "weinsommelier"
 url: "https://github.com/GitKranich/WeinSommelier"
 init: false

@@ -339,6 +339,36 @@ class TestVivinoSearch:
         assert len(data["results"]) == 2
 
     @patch("requests.Session")
+    def test_vivino_search_uses_configured_currency(self, MockSession, client, monkeypatch):
+        """Search must request prices in the add-on currency (EUR -> DE/EUR)."""
+        import app as wine_app
+        monkeypatch.setattr(wine_app, "load_options", lambda: {"currency": "EUR"})
+        session = _mock_vivino_session(MockSession, api_response=_explore_response([
+            _explore_match(price=19.5),
+        ]))
+
+        resp = client.get("/api/vivino-search?q=test")
+        data = json.loads(resp.data)
+        params = session.get.call_args_list[1].kwargs["params"]
+        assert params["country_code"] == "DE"
+        assert params["currency_code"] == "EUR"
+        assert data["results"][0]["price"] == 19.5
+
+    @patch("requests.Session")
+    def test_vivino_search_drops_foreign_currency_price(self, MockSession, client, monkeypatch):
+        """A price Vivino returns in another currency must not be used."""
+        import app as wine_app
+        monkeypatch.setattr(wine_app, "load_options", lambda: {"currency": "EUR"})
+        match = _explore_match(price=25.0)
+        match["price"]["currency"] = {"code": "USD"}
+        _mock_vivino_session(MockSession, api_response=_explore_response([match]))
+
+        resp = client.get("/api/vivino-search?q=test")
+        data = json.loads(resp.data)
+        assert data["ok"] is True
+        assert data["results"][0]["price"] is None
+
+    @patch("requests.Session")
     def test_vivino_search_blocked(self, MockSession, client):
         """When the API returns 403, response should be 503 with error=blocked."""
         blocked_resp = MagicMock()

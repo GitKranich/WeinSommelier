@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.11.1 (WeinSommelier)
+
+- **Vivino-Preise in der eingestellten Währung** - die Vivino-Suche fragt Preise jetzt im Land/in der Währung aus den Add-on-Optionen ab (z. B. EUR -> Deutschland/EUR). Preise, die Vivino trotzdem in einer anderen Währung liefert, werden verworfen statt falsch übernommen.
+
 ## 1.11.0
 
 - **Out-of-stock wines stay visible** - wines that drop to zero bottles no longer vanish from the cellar. They now show an "Empty" ribbon, and a new persistent "Show empty bottles" toggle in Settings remembers your choice across sessions (the existing quick-toggle in the filter bar still works as a temporary shortcut). Thanks @rogercrocha for the contribution.
