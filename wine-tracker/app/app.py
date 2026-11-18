@@ -10,6 +10,7 @@ from datetime import date, datetime
 from flask import Flask, render_template, request, redirect, url_for, send_from_directory, jsonify, g, session, Response
 from werkzeug.security import generate_password_hash, check_password_hash
 from translations import TRANSLATIONS
+import grapeminds as gm
 from export_import import (
     build_export_zip, export_filename,
     parse_import_file, match_wines, apply_import, ImportError as WineImportError,
@@ -96,6 +97,7 @@ def load_options():
         "minimax_model": "MiniMax-M3",
         "mistral_api_key": "",
         "mistral_model": "mistral-medium-latest",
+        "grapeminds_api_key": "",
     }
     provider_explicit = False
     try:
@@ -124,6 +126,7 @@ def load_options():
         "MISTRAL_API_KEY": "mistral_api_key",
         "MISTRAL_MODEL": "mistral_model",
         "CHAT_MODEL": "chat_model",
+        "GRAPEMINDS_API_KEY": "grapeminds_api_key",
     }
     for env_key, opt_key in env_map.items():
         val = os.environ.get(env_key)
@@ -199,7 +202,7 @@ def _ssl_verify():
         return True
 
 
-APP_VERSION = "1.11.1"
+APP_VERSION = "1.12.0"
 
 HA_OPTIONS = load_options()
 
@@ -464,6 +467,7 @@ def inject_globals():
         "t": T,
         "lang": LANG,
         "ai_enabled": ai_enabled,
+        "grapeminds_enabled": _grapeminds_key() != "",
         "auth_user": session.get("user") if AUTH_ENABLED else None,
         "auth_readonly": session.get("role") == "readonly" if AUTH_ENABLED else False,
         "app_version": APP_VERSION,
@@ -2357,6 +2361,93 @@ def _analyze_wine_from_context(opts, image_b64, media_type, wine_context):
         fields["wine_type"] = ""
 
     return fields
+
+
+# ── grapeminds Wine API + combined search ────────────────────────────────────
+
+_GM_STATUS = {"query_too_short": 400, "invalid_key": 401, "not_found": 404,
+              "rate_limited": 429, "timeout": 504, "generating": 503}
+
+
+def _grapeminds_key():
+    return (load_options().get("grapeminds_api_key") or "").strip()
+
+
+def _gm_error(err):
+    status = _GM_STATUS.get(err.code, 502)
+    if status >= 500 and err.code not in ("timeout", "generating"):
+        app.logger.warning("grapeminds error: %s %s", err.code, err)
+    body = {"ok": False, "error": err.code}
+    if err.retry_after:
+        body["retry_after"] = err.retry_after
+    return jsonify(body), status
+
+
+@app.route("/api/grapeminds-search")
+def grapeminds_search():
+    """Search wines in the grapeminds database (1 API request)."""
+    import requests as req
+    key = _grapeminds_key()
+    if not key:
+        return jsonify({"ok": False, "error": "no_api_key"}), 400
+    try:
+        results = gm.search(req.Session(), key, request.args.get("q", ""),
+                            lang=LANG, verify=_ssl_verify())
+    except gm.GrapemindsError as e:
+        return _gm_error(e)
+    return jsonify({"ok": True, "results": results})
+
+
+@app.route("/api/grapeminds-wine/<int:wine_id>")
+def grapeminds_wine(wine_id):
+    """Details + drinking window for one grapeminds wine (2 API requests)."""
+    import requests as req
+    key = _grapeminds_key()
+    if not key:
+        return jsonify({"ok": False, "error": "no_api_key"}), 400
+    try:
+        fields = gm.wine_fields(req.Session(), key, wine_id, lang=LANG, verify=_ssl_verify())
+    except gm.GrapemindsError as e:
+        return _gm_error(e)
+    sources = {k: "grapeminds" for k in fields if k != "grapeminds_id"}
+    return jsonify({"ok": True, "fields": fields, "sources": sources})
+
+
+@app.route("/api/combine", methods=["POST"])
+def combine_sources():
+    """Merge AI label data, a grapeminds wine and a Vivino result.
+
+    Body: {"ai": {...fields}, "grapeminds_id": 42, "vivino": {...result}}
+    Every part is optional.  grapeminds details are fetched server-side;
+    if that fails the other sources are still merged and the error is
+    reported in "warnings".
+    """
+    import requests as req
+    body = request.get_json(silent=True) or {}
+    ai = body.get("ai") if isinstance(body.get("ai"), dict) else {}
+    vivino = gm.vivino_fields(body.get("vivino"))
+    warnings = []
+
+    gm_fields = {}
+    gm_id = body.get("grapeminds_id")
+    if gm_id:
+        key = _grapeminds_key()
+        if not key:
+            warnings.append("grapeminds_no_api_key")
+        else:
+            try:
+                gm_fields = gm.wine_fields(req.Session(), key, int(gm_id),
+                                           lang=LANG, verify=_ssl_verify())
+            except gm.GrapemindsError as e:
+                warnings.append("grapeminds_" + e.code)
+            except (TypeError, ValueError):
+                warnings.append("grapeminds_invalid_id")
+
+    fields, sources = gm.merge(ai=ai, grapeminds=gm_fields, vivino=vivino)
+    if fields.get("wine_type") and fields["wine_type"] not in WINE_TYPES:
+        fields.pop("wine_type")
+        sources.pop("wine_type", None)
+    return jsonify({"ok": True, "fields": fields, "sources": sources, "warnings": warnings})
 
 
 @app.route("/api/reanalyze-wine", methods=["POST"])

@@ -50,3 +50,6 @@ configuration:
   mistral_model:
     name: Modelo Mistral
     description: Nome do modelo para Mistral (ex. mistral-medium-latest).
+  grapeminds_api_key:
+    name: grapeminds API key
+    description: API key from grapeminds.eu. Enables wine search via grapeminds and the combined search (AI + grapeminds + Vivino).

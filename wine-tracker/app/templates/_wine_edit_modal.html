@@ -32,6 +32,15 @@
         <p>{{ t.source_step_subtitle }}</p>
       </div>
       <div class="source-options">
+        {% if grapeminds_enabled %}
+        <div class="source-option source-option-featured" tabindex="0" role="button" onclick="onSourceCombined()">
+          <i class="mdi mdi-layers-search"></i>
+          <div class="source-text">
+            <div class="source-label">{{ t.combined_title }}</div>
+            <div class="source-desc">{{ t.combined_desc }}</div>
+          </div>
+        </div>
+        {% endif %}
         {% if ai_enabled %}
         <div class="source-option" tabindex="0" role="button" onclick="onSourceAi()">
           <i class="mdi mdi-camera"></i>
@@ -48,6 +57,15 @@
             <div class="source-desc">{{ t.vivino_desc }}</div>
           </div>
         </div>
+        {% if grapeminds_enabled %}
+        <div class="source-option" tabindex="0" role="button" onclick="onSourceGrapeminds()">
+          <i class="mdi mdi-database-search"></i>
+          <div class="source-text">
+            <div class="source-label">{{ t.grapeminds_title }}</div>
+            <div class="source-desc">{{ t.grapeminds_desc }}</div>
+          </div>
+        </div>
+        {% endif %}
         <div class="source-option" tabindex="0" role="button" onclick="skipToManual()">
           <i class="mdi mdi-pencil"></i>
           <div class="source-text">
@@ -100,6 +118,49 @@
       <div id="vivinoResults" class="vivino-results"></div>
     </div>
 
+    {% if grapeminds_enabled %}
+    <!-- grapeminds Panel -->
+    <div id="grapemindsStep" class="vivino-panel" style="display:none;">
+      <h3><i class="mdi mdi-database-search"></i> {{ t.grapeminds_title }}</h3>
+      <p>{{ t.grapeminds_hint }}</p>
+      <div class="src-search-row">
+        <input type="text" class="vivino-search-input" id="gmSearchInput"
+               placeholder="{{ t.vivino_placeholder }}" onkeydown="if(event.key==='Enter'){event.preventDefault();grapemindsSearch();}">
+        <button type="button" class="ai-btn primary" onclick="grapemindsSearch()"><i class="mdi mdi-magnify"></i></button>
+      </div>
+      <div id="gmStatus" class="vivino-status" style="display:none;"></div>
+      <div id="gmResults" class="vivino-results"></div>
+    </div>
+
+    <!-- Combined Panel: AI label + grapeminds + Vivino -->
+    <div id="combinedStep" class="vivino-panel" style="display:none;">
+      <h3><i class="mdi mdi-layers-search"></i> {{ t.combined_title }}</h3>
+      <p>{{ t.combined_hint }}</p>
+      {% if ai_enabled %}
+      <div class="ai-upload-area comb-photo" id="combPhotoArea">
+        <i class="mdi mdi-camera"></i>
+        <span id="combPhotoLabel">{{ t.combined_photo }}</span>
+        <input type="file" accept="image/*" capture="environment" onchange="combinedPhoto(this.files[0])">
+      </div>
+      {% endif %}
+      <div class="src-search-row">
+        <input type="text" class="vivino-search-input" id="combSearchInput"
+               placeholder="{{ t.vivino_placeholder }}" onkeydown="if(event.key==='Enter'){event.preventDefault();combinedSearch();}">
+        <button type="button" class="ai-btn primary" onclick="combinedSearch()"><i class="mdi mdi-magnify"></i></button>
+      </div>
+      <div id="combStatus" class="vivino-status" style="display:none;"></div>
+      <div id="combLists" style="display:none;">
+        <div class="comb-section-title">1. {{ t.combined_pick_gm }}</div>
+        <div id="combGmResults" class="vivino-results comb-results"></div>
+        <div class="comb-section-title">2. {{ t.combined_pick_vivino }}</div>
+        <div id="combVivinoResults" class="vivino-results comb-results"></div>
+        <div class="ai-btn-row">
+          <button type="button" class="ai-btn primary" id="combApplyBtn" onclick="combinedApply()">{{ t.combined_apply }}</button>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+
     <form method="post" id="wineForm" enctype="multipart/form-data">
       <input type="hidden" name="ai_image" id="aiImageField" value="">
       <input type="hidden" name="vivino_id" id="wine_vivino_id" value="">
@@ -140,6 +201,11 @@
               <button type="button" class="reload-popover-option" onclick="reloadViaVivino(); closeReloadPopover();">
                 <i class="mdi mdi-web"></i> {{ t.reload_vivino_desc }}
               </button>
+              {% if grapeminds_enabled %}
+              <button type="button" class="reload-popover-option" onclick="reloadViaGrapeminds(); closeReloadPopover();">
+                <i class="mdi mdi-database-search"></i> {{ t.reload_grapeminds_desc }}
+              </button>
+              {% endif %}
             </div>
           </div>
           <button type="submit" class="btn-submit" id="wineSubmitBtn">{{ t.btn_save }}</button>
@@ -151,6 +217,8 @@
 </div>
 
 <script src="{{ ingress }}/static/wine-modal.js"></script>
+<script>var GRAPEMINDS_ENABLED = {{ 'true' if grapeminds_enabled else 'false' }};</script>
+<script src="{{ ingress }}/static/wine-sources.js"></script>
 <script>
 // ── Wine Edit Modal JS ──────────────────────────────────────────────────────
 // These functions power the add/edit wine modal on all pages.
@@ -187,6 +255,7 @@ function openWineModal(id, wine) {
   document.getElementById('aiImageField').value = '';
   document.getElementById('deleteImageField').value = '';
   _editWineId = isEdit ? id : null;
+  clearSourceBadges();
 
   // Fill fields (empty for add, data for edit)
   var w = wine || {};
@@ -270,6 +339,7 @@ function openWineModal(id, wine) {
 // ── Source / AI / Vivino Step Functions ──────────────────────────────────────
 
 function showSourceStep() {
+  hideSourcePanels();
   var sourceStep = document.getElementById('sourceStep');
   var aiStep = document.getElementById('aiStep');
   var vivinoStep = document.getElementById('vivinoStep');
@@ -306,6 +376,7 @@ function onSourceVivino() {
 }
 
 function showAiPanel() {
+  hideSourcePanels();
   var sourceStep = document.getElementById('sourceStep');
   var aiStep = document.getElementById('aiStep');
   var vivinoStep = document.getElementById('vivinoStep');
@@ -328,6 +399,7 @@ function showAiPanel() {
 }
 
 function showVivinoPanel() {
+  hideSourcePanels();
   var sourceStep = document.getElementById('sourceStep');
   var aiStep = document.getElementById('aiStep');
   var vivinoStep = document.getElementById('vivinoStep');
@@ -349,6 +421,7 @@ function showVivinoPanel() {
 }
 
 function showFormStep() {
+  hideSourcePanels();
   var sourceStep = document.getElementById('sourceStep');
   var aiStep = document.getElementById('aiStep');
   var vivinoStep = document.getElementById('vivinoStep');

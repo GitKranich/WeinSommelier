@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.12.0 (WeinSommelier)
+
+- **grapeminds als neue Quelle** - mit einem API-Schlüssel von grapeminds.eu (Add-on-Option `grapeminds_api_key`) lassen sich Weine in einer geprüften Datenbank suchen. Übernommen werden Weingut, Name, Typ, Region und Land, Rebsorten, Trinkfenster, Geschmacksprofil sowie Beschreibung, Lagerhinweis und Speiseempfehlung (ins Notizfeld).
+- **Kombinierte Suche** - Etikett fotografieren (KI, optional) oder Namen eingeben; grapeminds und Vivino werden parallel durchsucht, du wählst in beiden Listen den passenden Wein. Jedes Feld kommt aus der zuverlässigsten Quelle: Jahrgang/Alkohol/Flaschengröße vom Etikett, Stammdaten und Trinkfenster von grapeminds, Preis/Bewertung/Bild von Vivino, KI-Schätzungen nur als Lückenfüller.
+- **Herkunftskennzeichnung** - kleine Badges an den Feldern zeigen, ob ein Wert von grapeminds, Vivino, vom Etikett oder aus einer KI-Schätzung stammt.
+- **Daten ergänzen** - beim Bearbeiten können fehlende Felder jetzt auch von grapeminds geladen werden.
+- grapeminds-Suchen laufen nur auf Enter/Klick (nicht bei jedem Tastendruck), um das Monatskontingent zu schonen.
+
 ## 1.11.1 (WeinSommelier)
 
 - **Vivino-Preise in der eingestellten Währung** - die Vivino-Suche fragt Preise jetzt im Land/in der Währung aus den Add-on-Optionen ab (z. B. EUR -> Deutschland/EUR). Preise, die Vivino trotzdem in einer anderen Währung liefert, werden verworfen statt falsch übernommen.

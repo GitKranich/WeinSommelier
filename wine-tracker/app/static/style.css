@@ -2741,3 +2741,27 @@ html.light .adv-cond-input[type="time"]::-webkit-calendar-picker-indicator {
   .adv-filter-name-footer .btn-cancel,
   .adv-filter-name-footer .btn-primary { flex: 1; justify-content: center; }
 }
+
+/* ── WeinSommelier: grapeminds / combined search / source badges ──────────── */
+.source-option-featured { border-color: var(--accent); }
+.src-search-row { display: flex; gap: .5rem; align-items: stretch; }
+.src-search-row .vivino-search-input { flex: 1; }
+.src-search-row .ai-btn { flex: 0 0 auto; margin: 0; }
+.comb-photo { margin-bottom: 1rem; }
+.comb-section-title { font-size: .8rem; font-weight: 600; text-transform: uppercase;
+  letter-spacing: .04em; color: var(--muted); margin: 1rem 0 .25rem; }
+.comb-results { max-height: 260px; margin-top: 0; }
+.src-result { border: 2px solid transparent; }
+.src-result.selected { border-color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 10%, transparent); }
+.src-result-icon { width: 40px; height: 40px; flex-shrink: 0; display: flex;
+  align-items: center; justify-content: center; font-size: 1.4rem; opacity: .5; }
+.src-result-img { width: 40px; height: 56px; object-fit: contain; flex-shrink: 0; border-radius: 4px; }
+.src-none .vivino-result-meta { font-style: italic; }
+.src-badge { display: inline-block; margin-left: .4rem; padding: 0 .4rem; border-radius: 999px;
+  font-size: .65rem; font-weight: 600; line-height: 1.5; vertical-align: middle;
+  text-transform: none; letter-spacing: 0; cursor: help; }
+.src-grapeminds { background: color-mix(in srgb, #2e7d32 18%, transparent); color: #2e7d32; }
+.src-vivino { background: color-mix(in srgb, #a61d4d 18%, transparent); color: #c2185b; }
+.src-label { background: color-mix(in srgb, #1565c0 18%, transparent); color: #1e88e5; }
+.src-ai { background: color-mix(in srgb, #ef6c00 18%, transparent); color: #ef6c00; }
