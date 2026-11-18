@@ -259,3 +259,29 @@ class TestRoutes:
         html = client.get("/").get_data(as_text=True)
         assert "onSourceGrapeminds()" in html
         assert "onSourceCombined()" in html
+
+
+class TestRelativeDrinkingWindow:
+    def test_wine_fields_relative_without_vintage(self):
+        s = MagicMock()
+        detail = {"data": dict(DETAIL["data"], display_name="Barolo")}
+        s.get.side_effect = [_resp(body=detail), _resp(body={"from": 6, "to": 18})]
+        f = gm.wine_fields(s, "k", 42)
+        assert f["drink_offset"] == [6, 18]
+        assert "drink_from" not in f
+
+    def test_wine_fields_relative_with_vintage_in_name(self):
+        s = MagicMock()
+        s.get.side_effect = [_resp(body=DETAIL), _resp(body={"from": 6, "to": 18})]
+        f = gm.wine_fields(s, "k", 42)
+        assert (f["drink_from"], f["drink_until"]) == (2024, 2036)
+
+    def test_merge_uses_label_vintage_for_offset(self):
+        fields, src = gm.merge({"vintage": 2016}, {"drink_offset": [6, 18], "drink_from": 2024}, {})
+        assert (fields["drink_from"], fields["drink_until"]) == (2022, 2034)
+        assert src["drink_from"] == "grapeminds"
+
+    def test_merge_offset_without_any_vintage_falls_back_to_ai(self):
+        fields, src = gm.merge({"drink_from": 2025}, {"drink_offset": [6, 18]}, {})
+        assert fields["drink_from"] == 2025 and src["drink_from"] == "ai"
+        assert fields["drink_offset"] == [6, 18]

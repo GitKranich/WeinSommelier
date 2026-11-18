@@ -1,6 +1,6 @@
 name: "WeinSommelier (Dev)"
 description: "Development build of WeinSommelier - unstable, for testing"
-version: "1.12.2-dev.9"
+version: "1.12.3-dev.10"
 slug: "weinsommelier_dev"
 url: "https://github.com/GitKranich/WeinSommelier"
 init: false

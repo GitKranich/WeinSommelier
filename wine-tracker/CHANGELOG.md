@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.12.3 (WeinSommelier)
+
+- **Trinkfenster von grapeminds richtig umgerechnet** - grapeminds liefert die Trinkreife oft als "Jahre nach der Ernte" (z. B. 6-18). Diese Angabe wird jetzt mit dem Jahrgang in Jahreszahlen umgerechnet (Jahrgang 2019 -> 2025-2037). Ist der Jahrgang noch unbekannt, bleibt das Feld leer und füllt sich automatisch, sobald du ihn einträgst.
+
 ## 1.12.2 (WeinSommelier)
 
 - **grapeminds-Feinschliff nach Test mit echten Daten** - das Weingut steht nicht mehr doppelt im Weinnamen ("Bruno Rivetti, Barolo" -> "Barolo"), die Notiz enthält nur noch Beschreibung, Lagerhinweis und Speiseempfehlung (keine doppelte Verkostungsnotiz), und die Sprache wird zusätzlich per `lang`-Parameter angefragt.

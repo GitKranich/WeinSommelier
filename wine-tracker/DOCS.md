@@ -134,4 +134,4 @@ Planned features are tracked in
 See the full documentation on
 [GitHub](https://github.com/xenofex7/ha-wine-tracker).
 
-[version-badge]: https://img.shields.io/badge/version-v1.12.2-blue.svg
+[version-badge]: https://img.shields.io/badge/version-v1.12.3-blue.svg

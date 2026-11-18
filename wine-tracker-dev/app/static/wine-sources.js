@@ -129,8 +129,32 @@ function markSources(sources) {
   });
 }
 
+var _drinkOffset = null;
+
+function _applyDrinkOffset() {
+  if (!_drinkOffset) return false;
+  var year = parseInt(document.getElementById('wine_year').value, 10);
+  if (!year || year < 1900) return false;
+  var fromEl = document.getElementById('wine_drink_from');
+  var untilEl = document.getElementById('wine_drink_until');
+  var changed = false;
+  if (_drinkOffset[0] != null && !fromEl.value) { fromEl.value = year + Number(_drinkOffset[0]); changed = true; }
+  if (_drinkOffset[1] != null && !untilEl.value) { untilEl.value = year + Number(_drinkOffset[1]); changed = true; }
+  if (changed) markSources(Object.assign({}, _lastSources, { drink_from: 'grapeminds', drink_until: 'grapeminds' }));
+  return changed;
+}
+
+var _lastSources = {};
+
+document.addEventListener('change', function(e) {
+  if (e.target && e.target.id === 'wine_year') _applyDrinkOffset();
+});
+
 function _applyFields(fields, sources, imageFilename) {
+  _drinkOffset = fields.drink_offset || null;
+  _lastSources = sources || {};
   populateFormFromAi(fields, imageFilename || null);
+  _applyDrinkOffset();
   if (fields.rating) {
     var starVal = Math.round(Number(fields.rating));
     if (starVal >= 1 && starVal <= 5) {

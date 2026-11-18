@@ -261,10 +261,19 @@ def wine_fields(session, api_key, wine_id, lang="de", verify=True):
                               lang, params={"lang": lang}, verify=verify))
         if isinstance(period, dict):
             period = period.get("drinking_period", period) or {}
-            if period.get("from"):
-                fields["drink_from"] = int(period["from"])
-            if period.get("to"):
-                fields["drink_until"] = int(period["to"])
+            d_from = int(period["from"]) if period.get("from") is not None else None
+            d_to = int(period["to"]) if period.get("to") is not None else None
+            if (d_from or 0) >= 1900 or (d_to or 0) >= 1900:
+                # absolute calendar years
+                if d_from:
+                    fields["drink_from"] = d_from
+                if d_to:
+                    fields["drink_until"] = d_to
+            elif d_from is not None or d_to is not None:
+                # years after the vintage, e.g. 6-18
+                fields["drink_offset"] = [d_from, d_to]
+                if vintage:
+                    fields.update(drinking_years(vintage, [d_from, d_to]))
             storage = (period.get("storage") or "").strip()
             if storage:
                 notes.append(storage)
@@ -276,6 +285,23 @@ def wine_fields(session, api_key, wine_id, lang="de", verify=True):
     fields["notes"] = "\n\n".join(notes)
     fields["grapeminds_id"] = detail.get("id", wine_id)
     return {k: v for k, v in fields.items() if v not in (None, "", [])}
+
+
+def drinking_years(vintage, offset):
+    """Turn a relative drinking window (years after vintage) into years."""
+    out = {}
+    try:
+        v = int(vintage)
+    except (TypeError, ValueError):
+        return out
+    if not offset or v < 1900:
+        return out
+    lo, hi = (list(offset) + [None, None])[:2]
+    if lo is not None:
+        out["drink_from"] = v + int(lo)
+    if hi is not None:
+        out["drink_until"] = v + int(hi)
+    return out
 
 
 # ── Merging the three sources ────────────────────────────────────────────────
@@ -300,6 +326,7 @@ FIELD_PRIORITY = {
     "maturity_data": ("ai",),
     "price":         ("vivino", "ai_label"),
     "rating":        ("vivino",),
+    "drink_offset":  ("grapeminds",),
 }
 
 # Fields the AI reads directly from the label (everything else it estimates).
@@ -336,6 +363,19 @@ def merge(ai=None, grapeminds=None, vivino=None):
         "ai_label": {k: v for k, v in ai.items() if k in _AI_LABEL_FIELDS},
         "ai": {k: v for k, v in ai.items() if k not in _AI_LABEL_FIELDS},
     }
+    # A relative grapeminds drinking window becomes absolute once the
+    # vintage of *this* bottle is known (label beats grapeminds' own guess).
+    gm_pool = pools["grapeminds"]
+    offset = gm_pool.get("drink_offset")
+    if offset:
+        vintage = (pools["ai_label"].get("vintage") or pools["vivino"].get("vintage")
+                   or gm_pool.get("vintage"))
+        gm_pool = dict(gm_pool)
+        gm_pool.pop("drink_from", None)
+        gm_pool.pop("drink_until", None)
+        gm_pool.update(drinking_years(vintage, offset))
+        pools["grapeminds"] = gm_pool
+
     fields, sources = {}, {}
     for field, order in FIELD_PRIORITY.items():
         for src in order:

@@ -267,6 +267,7 @@ function openWineModal(id, wine) {
   document.getElementById('deleteImageField').value = '';
   _editWineId = isEdit ? id : null;
   clearSourceBadges();
+  if (typeof _drinkOffset !== 'undefined') _drinkOffset = null;
 
   // Fill fields (empty for add, data for edit)
   var w = wine || {};
