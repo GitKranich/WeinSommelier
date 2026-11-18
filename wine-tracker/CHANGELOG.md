@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.12.1 (WeinSommelier)
+
+- **Eigene Kamera-Ansicht für Etikettfotos** - bei der KI-Erkennung und der kombinierten Suche gibt es jetzt getrennte Buttons "Kamera" und "Galerie". "Kamera" öffnet eine Live-Vorschau mit Auslöser direkt in der App, da manche Handy-Apps (z. B. die Home-Assistant-App) bei Datei-Uploads nur die Galerie anbieten. Ohne HTTPS oder ohne Kamerafreigabe wird automatisch auf die Fotoauswahl des Handys zurückgegriffen.
+
 ## 1.12.0 (WeinSommelier)
 
 - **grapeminds als neue Quelle** - mit einem API-Schlüssel von grapeminds.eu (Add-on-Option `grapeminds_api_key`) lassen sich Weine in einer geprüften Datenbank suchen. Übernommen werden Weingut, Name, Typ, Region und Land, Rebsorten, Trinkfenster, Geschmacksprofil sowie Beschreibung, Lagerhinweis und Speiseempfehlung (ins Notizfeld).

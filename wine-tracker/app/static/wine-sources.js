@@ -88,6 +88,8 @@ function onSourceCombined() {
   var label = document.getElementById('combPhotoLabel');
   if (label) label.textContent = _tr('combined_photo', 'Photograph the label (optional)');
   var photoInput = document.querySelector('#combPhotoArea input[type=file]');
+  var photoArea = document.getElementById('combPhotoArea');
+  if (photoArea) photoArea.style.display = '';
   if (photoInput) photoInput.value = '';
   document.getElementById('combLists').style.display = 'none';
   _setStatus('combStatus', '');
@@ -355,3 +357,112 @@ function combinedApply() {
     _setStatus('combStatus', _tr('combined_error', 'Merging failed'), true);
   });
 }
+
+// ── In-app camera ────────────────────────────────────────────────────────────
+// Some phone apps (notably the Home Assistant companion app) only offer the
+// gallery for <input type=file capture>. When the page runs in a secure
+// context we open the camera ourselves via getUserMedia; otherwise we fall
+// back to a capture file input.
+
+var _cam = { stream: null, onFile: null };
+
+function _cameraSupported() {
+  return !!(window.isSecureContext && navigator.mediaDevices &&
+            navigator.mediaDevices.getUserMedia);
+}
+
+function _fallbackCaptureInput(onFile) {
+  var input = document.createElement('input');
+  input.type = 'file';
+  input.accept = 'image/*';
+  input.setAttribute('capture', 'environment');
+  input.style.display = 'none';
+  input.onchange = function() {
+    if (input.files && input.files[0]) onFile(input.files[0]);
+    input.remove();
+  };
+  document.body.appendChild(input);
+  input.click();
+}
+
+function _cameraOverlay() {
+  var ov = document.getElementById('camOverlay');
+  if (ov) return ov;
+  ov = document.createElement('div');
+  ov.id = 'camOverlay';
+  ov.className = 'cam-overlay';
+  ov.innerHTML =
+    '<video id="camVideo" autoplay playsinline muted></video>' +
+    '<div class="cam-hint" id="camHint"></div>' +
+    '<div class="cam-controls">' +
+      '<button type="button" class="cam-btn" onclick="closeCameraCapture()" aria-label="' +
+        _esc(_tr('photo_cancel', 'Cancel')) + '"><i class="mdi mdi-close"></i></button>' +
+      '<button type="button" class="cam-shutter" onclick="takeCameraPhoto()" aria-label="' +
+        _esc(_tr('photo_take', 'Take photo')) + '"></button>' +
+      '<label class="cam-btn" aria-label="' + _esc(_tr('photo_gallery', 'Gallery')) + '">' +
+        '<i class="mdi mdi-image-multiple"></i>' +
+        '<input type="file" accept="image/*" onchange="cameraPickedFile(this)"></label>' +
+    '</div>';
+  document.body.appendChild(ov);
+  return ov;
+}
+
+function openCameraCapture(onFile) {
+  if (!_cameraSupported()) { _fallbackCaptureInput(onFile); return; }
+  _cam.onFile = onFile;
+  var ov = _cameraOverlay();
+  var hint = document.getElementById('camHint');
+  hint.textContent = _tr('photo_starting', 'Starting camera\u2026');
+  ov.style.display = 'flex';
+  navigator.mediaDevices.getUserMedia({
+    audio: false,
+    video: { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1440 } }
+  }).then(function(stream) {
+    _cam.stream = stream;
+    var video = document.getElementById('camVideo');
+    video.srcObject = stream;
+    hint.textContent = _tr('photo_hint', 'Fit the label into the frame');
+  }).catch(function() {
+    // Permission denied or no camera: close and use the system picker.
+    closeCameraCapture();
+    _fallbackCaptureInput(onFile);
+  });
+}
+
+function closeCameraCapture() {
+  if (_cam.stream) { _cam.stream.getTracks().forEach(function(t) { t.stop(); }); }
+  _cam.stream = null;
+  var video = document.getElementById('camVideo');
+  if (video) video.srcObject = null;
+  var ov = document.getElementById('camOverlay');
+  if (ov) ov.style.display = 'none';
+}
+
+function takeCameraPhoto() {
+  var video = document.getElementById('camVideo');
+  if (!video || !video.videoWidth) return;
+  var canvas = document.createElement('canvas');
+  canvas.width = video.videoWidth;
+  canvas.height = video.videoHeight;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  var onFile = _cam.onFile;
+  canvas.toBlob(function(blob) {
+    closeCameraCapture();
+    if (!blob || !onFile) return;
+    var file = new File([blob], 'etikett-' + Date.now() + '.jpg', { type: 'image/jpeg' });
+    onFile(file);
+  }, 'image/jpeg', 0.9);
+}
+
+function cameraPickedFile(input) {
+  var file = input.files && input.files[0];
+  var onFile = _cam.onFile;
+  input.value = '';
+  closeCameraCapture();
+  if (file && onFile) onFile(file);
+}
+
+document.addEventListener('keydown', function(e) {
+  var ov = document.getElementById('camOverlay');
+  if (e.key === 'Escape' && ov && ov.style.display !== 'none') closeCameraCapture();
+});

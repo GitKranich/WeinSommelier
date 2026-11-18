@@ -82,10 +82,14 @@
       <h3>{{ t.ai_step_title }}</h3>
       <p>{{ t.ai_step_subtitle }}</p>
 
-      <div class="ai-upload-area" id="aiUploadArea">
-        <i class="mdi mdi-camera"></i>
-        <span>{{ t.ai_upload_btn }}</span>
-        <input type="file" accept="image/*" capture="environment" onchange="handleAiImage(this.files[0])">
+      <div class="photo-choice" id="aiUploadArea">
+        <button type="button" class="photo-choice-btn" onclick="openCameraCapture(handleAiImage)">
+          <i class="mdi mdi-camera"></i><span>{{ t.photo_camera }}</span>
+        </button>
+        <label class="photo-choice-btn">
+          <i class="mdi mdi-image-multiple"></i><span>{{ t.photo_gallery }}</span>
+          <input type="file" accept="image/*" onchange="handleAiImage(this.files[0])">
+        </label>
       </div>
 
       <div class="ai-preview-wrap" id="aiPreviewWrap" style="display:none;">
@@ -137,10 +141,17 @@
       <h3><i class="mdi mdi-layers-search"></i> {{ t.combined_title }}</h3>
       <p>{{ t.combined_hint }}</p>
       {% if ai_enabled %}
-      <div class="ai-upload-area comb-photo" id="combPhotoArea">
-        <i class="mdi mdi-camera"></i>
-        <span id="combPhotoLabel">{{ t.combined_photo }}</span>
-        <input type="file" accept="image/*" capture="environment" onchange="combinedPhoto(this.files[0])">
+      <div class="comb-photo">
+        <div class="comb-photo-label" id="combPhotoLabel">{{ t.combined_photo }}</div>
+        <div class="photo-choice" id="combPhotoArea">
+          <button type="button" class="photo-choice-btn" onclick="openCameraCapture(combinedPhoto)">
+            <i class="mdi mdi-camera"></i><span>{{ t.photo_camera }}</span>
+          </button>
+          <label class="photo-choice-btn">
+            <i class="mdi mdi-image-multiple"></i><span>{{ t.photo_gallery }}</span>
+            <input type="file" accept="image/*" onchange="combinedPhoto(this.files[0])">
+          </label>
+        </div>
       </div>
       {% endif %}
       <div class="src-search-row">
