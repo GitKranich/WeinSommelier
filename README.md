@@ -1,3 +1,13 @@
+# WeinSommelier
+
+> **Hinweis:** Dieses Repository ist eine private, eigenständig weiterentwickelte Kopie von
+> [**Wine Tracker** von xenofex7](https://github.com/xenofex7/ha-wine-tracker)
+> (Stand: Version v1.11.0, kopiert am 18.11.2026). Alle Rechte am Originalcode liegen beim
+> ursprünglichen Autor; der Code steht unter der [MIT-Lizenz](LICENSE), deren
+> Copyright-Hinweis unverändert erhalten bleibt. Die Commit-Historie des Originals ist enthalten.
+
+---
+
 # Wine Tracker - Home Assistant Add-on & Docker Standalone
 
 <p align="center">
