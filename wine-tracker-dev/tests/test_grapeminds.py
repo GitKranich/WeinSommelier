@@ -77,6 +77,11 @@ class TestMapping:
         tp = gm.taste_profile({"body": 5, "tannins": 7, "acidity": 0, "sweetness": "2"})
         assert tp == {"body": 5, "tannin": 5, "acidity": 1, "sweetness": 2}
 
+    def test_strip_producer(self):
+        assert gm.strip_producer("Bruno Rivetti, Barolo", "Bruno Rivetti") == "Barolo"
+        assert gm.strip_producer("Barolo DOCG", "Marchesi di Barolo") == "Barolo DOCG"
+        assert gm.strip_producer("Funtanin", "Funtanin") == "Funtanin"
+
     def test_country_name(self):
         assert gm.country_name("IT", "de") == "Italien"
         assert gm.country_name("IT", "en") == "Italy"
@@ -101,6 +106,12 @@ class TestClient:
         with pytest.raises(gm.GrapemindsError) as e:
             gm.search(MagicMock(), "k", "ab")
         assert e.value.code == "query_too_short"
+
+    def test_search_strips_producer_from_name(self):
+        s = MagicMock()
+        s.get.return_value = _resp(body={"data": [{"id": 1, "display_name": "Bruno Rivetti, Barolo",
+                                                   "color": "red", "producer_display_name": "Bruno Rivetti"}]})
+        assert gm.search(s, "k", "Barolo")[0]["name"] == "Barolo"
 
     @pytest.mark.parametrize("status,body,code", [
         (401, {"message": "Invalid API key"}, "invalid_key"),
@@ -131,6 +142,7 @@ class TestClient:
         assert "Ein kraftvoller Rotwein." in f["notes"]
         assert "Kühl lagern." in f["notes"]
         assert "Passt zu: Trüffel und Wild." in f["notes"]
+        assert "Rote Beeren" not in f["notes"]  # tasting notes dropped when a description exists
         assert f["grapeminds_id"] == 42
 
     def test_wine_fields_without_drinking_period(self):

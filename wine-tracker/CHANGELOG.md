@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.12.2 (WeinSommelier)
+
+- **grapeminds-Feinschliff nach Test mit echten Daten** - das Weingut steht nicht mehr doppelt im Weinnamen ("Bruno Rivetti, Barolo" -> "Barolo"), die Notiz enthält nur noch Beschreibung, Lagerhinweis und Speiseempfehlung (keine doppelte Verkostungsnotiz), und die Sprache wird zusätzlich per `lang`-Parameter angefragt.
+
 ## 1.12.1 (WeinSommelier)
 
 - **Eigene Kamera-Ansicht für Etikettfotos** - bei der KI-Erkennung und der kombinierten Suche gibt es jetzt getrennte Buttons "Kamera" und "Galerie". "Kamera" öffnet eine Live-Vorschau mit Auslöser direkt in der App, da manche Handy-Apps (z. B. die Home-Assistant-App) bei Datei-Uploads nur die Galerie anbieten. Ohne HTTPS oder ohne Kamerafreigabe wird automatisch auf die Fotoauswahl des Handys zurückgegriffen.

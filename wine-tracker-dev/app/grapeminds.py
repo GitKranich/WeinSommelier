@@ -112,6 +112,17 @@ def country_name(code, lang="de"):
     return names[0] if lang == "de" else names[1]
 
 
+def strip_producer(name, producer):
+    """grapeminds names often repeat the producer ("Bruno Rivetti, Barolo")."""
+    name = (name or "").strip()
+    producer = (producer or "").strip()
+    if producer and name.lower().startswith(producer.lower()):
+        rest = name[len(producer):].lstrip(" ,-–")
+        if rest:
+            return rest
+    return name
+
+
 def year_from_name(name):
     """grapeminds display names often end with the vintage ("... 2018")."""
     if not name:
@@ -191,7 +202,7 @@ def search(session, api_key, query, lang="de", limit=10, verify=True):
         producer = (it.get("producer_display_name") or it.get("producer_name") or "").strip()
         results.append({
             "grapeminds_id": it.get("id"),
-            "name": name,
+            "name": strip_producer(name, producer),
             "producer": producer,
             "year": it.get("vintage") or year_from_name(name),
             "wine_type": wine_type(it.get("color"), None, None, it.get("residual_sugar")),
@@ -204,13 +215,14 @@ def wine_fields(session, api_key, wine_id, lang="de", verify=True):
 
     Costs two API requests.  A missing drinking period is not an error.
     """
-    detail = _unwrap(_get(session, f"/wines/{int(wine_id)}", api_key, lang, verify=verify))
+    detail = _unwrap(_get(session, f"/wines/{int(wine_id)}", api_key, lang,
+                          params={"lang": lang}, verify=verify))
     if not isinstance(detail, dict):
         raise GrapemindsError("parse_error")
 
     producer_obj = detail.get("producer") or {}
     producer = (producer_obj.get("display_name") or producer_obj.get("name") or "").strip()
-    name = (detail.get("display_name") or "").strip()
+    name = strip_producer(detail.get("display_name"), producer)
     vintage = detail.get("vintage") or year_from_name(name)
     if vintage and name.endswith(str(vintage)):
         name = name[: -len(str(vintage))].rstrip(" ,-")
@@ -234,11 +246,14 @@ def wine_fields(session, api_key, wine_id, lang="de", verify=True):
         "taste_profile": taste_profile(detail.get("flavor_profile")),
     }
 
+    # Keep the note short: one description (the tasting notes largely repeat
+    # it), the storage hint and the pairing.
     notes = []
     for key in ("description", "descriptions", "tasting_notes", "tastingnotes"):
         txt = _text(detail.get(key))
-        if txt and txt not in notes:
+        if txt:
             notes.append(txt)
+            break
     pairing = _text(detail.get("pairing") or detail.get("pairings"))
 
     try:
