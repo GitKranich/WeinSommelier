@@ -1,8 +1,8 @@
-name: "Wine Tracker"
-description: "Track and manage your wine cellar"
+name: "WeinSommelier"
+description: "Weinkeller verwalten (basiert auf Wine Tracker von xenofex7)"
 version: "1.11.0"
-slug: "wine_tracker"
-url: "https://github.com/xenofex7/ha-wine-tracker"
+slug: "weinsommelier"
+url: "https://github.com/GitKranich/WeinSommelier"
 init: false
 arch:
   - aarch64
@@ -12,14 +12,16 @@ arch:
   - i386
 startup: application
 boot: auto
+environment:
+  DATA_DIR: /share/weinsommelier
 ports:
-  5050/tcp: 5050
+  5050/tcp: 5052
 ports_description:
-  5050/tcp: "Wine Tracker Web UI"
+  5050/tcp: "WeinSommelier Web UI"
 ingress: true
 ingress_port: 5050
 panel_icon: mdi:bottle-wine
-panel_title: "Wine Tracker"
+panel_title: "WeinSommelier"
 options:
   currency: "CHF"
   language: "de"

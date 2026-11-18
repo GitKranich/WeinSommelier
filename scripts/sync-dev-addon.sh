@@ -24,17 +24,17 @@ path = "wine-tracker-dev/config.yaml"
 with open(path) as f:
     cfg = f.read()
 
-cfg = re.sub(r'^name: .*$', 'name: "Wine Tracker (Dev)"', cfg, count=1, flags=re.M)
+cfg = re.sub(r'^name: .*$', 'name: "WeinSommelier (Dev)"', cfg, count=1, flags=re.M)
 cfg = re.sub(r'^description: .*$',
-             'description: "Development build of Wine Tracker - unstable, for testing"',
+             'description: "Development build of WeinSommelier - unstable, for testing"',
              cfg, count=1, flags=re.M)
 cfg = re.sub(r'^version: "([^"]+)"$',
              lambda m: f'version: "{m.group(1)}-{suffix}"', cfg, count=1, flags=re.M)
-cfg = re.sub(r'^slug: .*$', 'slug: "wine_tracker_dev"', cfg, count=1, flags=re.M)
-cfg = cfg.replace("ports:\n  5050/tcp: 5050", "ports:\n  5050/tcp: 5051", 1)
-cfg = re.sub(r'^panel_title: .*$', 'panel_title: "Wine Tracker Dev"', cfg, count=1, flags=re.M)
-cfg = cfg.replace("boot: auto\n",
-                  "boot: auto\nenvironment:\n  DATA_DIR: /share/wine-tracker-dev\n", 1)
+cfg = re.sub(r'^slug: .*$', 'slug: "weinsommelier_dev"', cfg, count=1, flags=re.M)
+cfg = cfg.replace("ports:\n  5050/tcp: 5052", "ports:\n  5050/tcp: 5053", 1)
+cfg = re.sub(r'^panel_title: .*$', 'panel_title: "WeinSommelier Dev"', cfg, count=1, flags=re.M)
+cfg = cfg.replace("DATA_DIR: /share/weinsommelier\n",
+                  "DATA_DIR: /share/weinsommelier-dev\n", 1)
 
 with open(path, "w") as f:
     f.write(cfg)

@@ -1,8 +1,8 @@
-name: "Wine Tracker (Dev)"
-description: "Development build of Wine Tracker - unstable, for testing"
+name: "WeinSommelier (Dev)"
+description: "Development build of WeinSommelier - unstable, for testing"
 version: "1.11.0-dev.6"
-slug: "wine_tracker_dev"
-url: "https://github.com/xenofex7/ha-wine-tracker"
+slug: "weinsommelier_dev"
+url: "https://github.com/GitKranich/WeinSommelier"
 init: false
 arch:
   - aarch64
@@ -13,15 +13,15 @@ arch:
 startup: application
 boot: auto
 environment:
-  DATA_DIR: /share/wine-tracker-dev
+  DATA_DIR: /share/weinsommelier-dev
 ports:
-  5050/tcp: 5051
+  5050/tcp: 5053
 ports_description:
-  5050/tcp: "Wine Tracker Web UI"
+  5050/tcp: "WeinSommelier Web UI"
 ingress: true
 ingress_port: 5050
 panel_icon: mdi:bottle-wine
-panel_title: "Wine Tracker Dev"
+panel_title: "WeinSommelier Dev"
 options:
   currency: "CHF"
   language: "de"

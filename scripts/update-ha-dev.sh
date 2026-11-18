@@ -2,10 +2,10 @@
 # Update the Home Assistant local "Wine Tracker (Dev)" addon from GitHub main.
 #
 # Run inside the HA SSH addon console:
-#   curl -fsSL https://raw.githubusercontent.com/xenofex7/ha-wine-tracker/main/scripts/update-ha-dev.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/GitKranich/WeinSommelier/main/scripts/update-ha-dev.sh | bash
 #
 # Workflow:
-#   1. Clone/pull the repo to /tmp/ha-wine-tracker-repo (shallow)
+#   1. Clone/pull the repo to /tmp/weinsommelier-repo (shallow)
 #   2. Copy the wine-tracker/ subfolder into /addons/wine-tracker-dev/
 #   3. Patch slug + name so HA treats this as a separate addon from
 #      the official one installed via the addon store
@@ -13,11 +13,11 @@
 
 set -euo pipefail
 
-REPO_URL="https://github.com/xenofex7/ha-wine-tracker.git"
-REPO_DIR="/tmp/ha-wine-tracker-repo"
-ADDON_DIR="/addons/wine-tracker-dev"
-ADDON_SLUG="wine_tracker_dev"
-ADDON_NAME="Wine Tracker (Dev)"
+REPO_URL="https://github.com/GitKranich/WeinSommelier.git"
+REPO_DIR="/tmp/weinsommelier-repo"
+ADDON_DIR="/addons/weinsommelier-dev"
+ADDON_SLUG="weinsommelier_dev"
+ADDON_NAME="WeinSommelier (Dev)"
 
 echo "==> Sync repo to $REPO_DIR"
 if [ -d "$REPO_DIR/.git" ]; then

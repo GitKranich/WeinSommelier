@@ -137,11 +137,11 @@ Or add it manually:
 
 1. Go to **Settings -> Add-ons -> Add-on Store**
 2. Top right: **... -> Repositories**
-3. Add `https://github.com/xenofex7/ha-wine-tracker`
-4. **Wine Tracker** appears in the store
+3. Add `https://github.com/GitKranich/WeinSommelier`
+4. **WeinSommelier** appears in the store
 5. Click **Install**, then **Start**
 
-The add-on opens in the HA sidebar under **Wine Tracker**.
+The add-on opens in the HA sidebar under **WeinSommelier**.
 
 ### Docker standalone
 
@@ -352,4 +352,4 @@ Planned features are tracked in [ROADMAP.md](ROADMAP.md).
 MIT, see [LICENSE](LICENSE).
 
 [my-ha-badge]: https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg
-[my-ha-url]: https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fxenofex7%2Fha-wine-tracker
+[my-ha-url]: https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2FGitKranich%2FWeinSommelier
