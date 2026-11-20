@@ -34,5 +34,5 @@ wines with ratings and pricing, or type everything in yourself.
 Data is stored locally under `/share/wine-tracker/` and preserved across
 updates and restarts.
 
-[version-badge]: https://img.shields.io/badge/version-v1.12.4-blue.svg
+[version-badge]: https://img.shields.io/badge/version-v1.12.5-blue.svg
 [license-badge]: https://img.shields.io/badge/license-MIT-green.svg

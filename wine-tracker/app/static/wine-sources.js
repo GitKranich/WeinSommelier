@@ -250,13 +250,15 @@ function combinedPhoto(file) {
   var label = document.getElementById('combPhotoLabel');
   if (label) label.textContent = _tr('ai_analyzing', 'Analyzing…');
   _setStatus('combStatus', _tr('ai_analyzing', 'Analyzing…'));
-  var fd = new FormData();
-  fd.append('image', file);
-  _getJson(INGRESS + '/api/analyze-wine', { method: 'POST', body: fd })
+  normalizeImageFile(file).then(function(img) {
+    var fd = new FormData();
+    fd.append('image', img);
+    return _getJson(INGRESS + '/api/analyze-wine', { method: 'POST', body: fd });
+  })
     .then(function(data) {
       if (data.image_filename) _comb.aiImage = data.image_filename;
       if (!data.ok) {
-        _setStatus('combStatus', _tr('ai_error', 'AI analysis failed'), true);
+        _setStatus('combStatus', _tr('ai_error', 'AI analysis failed') + ' – ' + aiErrorText(data), true);
         if (label) label.textContent = _tr('combined_photo', 'Photograph the label (optional)');
         return;
       }
@@ -490,3 +492,50 @@ document.addEventListener('keydown', function(e) {
   var ov = document.getElementById('camOverlay');
   if (e.key === 'Escape' && ov && ov.style.display !== 'none') closeCameraCapture();
 });
+
+// ── Image normalisation before upload ───────────────────────────────────────
+// Re-encode every photo as a JPEG of at most 2000 px. This turns iPhone HEIC
+// photos and nameless files from phone apps into something the server and
+// the AI accept, and makes uploads over mobile data much faster. If the
+// browser cannot decode the file, the original is sent unchanged.
+function normalizeImageFile(file) {
+  return new Promise(function(resolve) {
+    if (!file || !window.URL || !document.createElement('canvas').toBlob) { resolve(file); return; }
+    var url = URL.createObjectURL(file);
+    var img = new Image();
+    img.onload = function() {
+      try {
+        var max = 2000, w = img.naturalWidth, h = img.naturalHeight;
+        if (!w || !h) { URL.revokeObjectURL(url); resolve(file); return; }
+        var scale = Math.min(1, max / Math.max(w, h));
+        var canvas = document.createElement('canvas');
+        canvas.width = Math.round(w * scale);
+        canvas.height = Math.round(h * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(function(blob) {
+          URL.revokeObjectURL(url);
+          if (!blob) { resolve(file); return; }
+          resolve(new File([blob], 'foto-' + Date.now() + '.jpg', { type: 'image/jpeg' }));
+        }, 'image/jpeg', 0.88);
+      } catch (e) { URL.revokeObjectURL(url); resolve(file); }
+    };
+    img.onerror = function() { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
+
+function aiErrorText(data, status) {
+  if (data && data.message) return data.message;
+  if (data && data.error) {
+    var map = {
+      no_api_key: 'KI ist nicht eingerichtet (API-Schlüssel fehlt)',
+      no_image: 'Kein Bild empfangen',
+      unsupported_image: 'Bildformat nicht unterstützt',
+      timeout: 'Zeitüberschreitung bei der KI',
+      parse_error: 'Antwort der KI nicht lesbar'
+    };
+    return map[data.error] || data.error;
+  }
+  if (status) return 'HTTP ' + status;
+  return 'Keine Verbindung zum Add-on';
+}

@@ -2799,3 +2799,5 @@ html.light .adv-cond-input[type="time"]::-webkit-calendar-picker-indicator {
   border: none; background: rgba(0,0,0,.5); color: #fff; font-size: 1.6rem;
   display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .cam-btn input[type=file] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+
+.ai-error-detail { font-size: .8rem; color: var(--muted); margin: -.5rem 0 1rem; word-break: break-word; }

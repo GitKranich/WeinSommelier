@@ -1948,3 +1948,38 @@ class TestAiModelList:
         mock_get.side_effect = RuntimeError("boom")
         resp = client.get("/api/ai-settings/models?provider=mistral")
         assert resp.status_code == 502
+
+
+
+class TestAnalyzeImageFormats:
+    """Photos from phone apps may lack an extension or use other formats."""
+
+    def _png_bytes(self):
+        from io import BytesIO
+        from PIL import Image
+        buf = BytesIO()
+        Image.new("RGB", (40, 30), (120, 20, 40)).save(buf, "PNG")
+        buf.seek(0)
+        return buf
+
+    @patch("app._call_anthropic")
+    @patch("app.load_options")
+    def test_image_without_extension_is_accepted(self, mock_opts, mock_call, client):
+        mock_opts.return_value = {**wine_app.HA_OPTIONS, "ai_provider": "anthropic", "anthropic_api_key": "k"}
+        mock_call.return_value = '{"name": "Test"}'
+        resp = client.post("/api/analyze-wine",
+                           data={"image": (self._png_bytes(), "photo")},
+                           content_type="multipart/form-data")
+        data = json.loads(resp.data)
+        assert data["ok"] is True
+        assert data["image_filename"].endswith(".jpg")
+
+    @patch("app.load_options")
+    def test_undecodable_file_reports_unsupported(self, mock_opts, client):
+        from io import BytesIO
+        mock_opts.return_value = {**wine_app.HA_OPTIONS, "ai_provider": "anthropic", "anthropic_api_key": "k"}
+        resp = client.post("/api/analyze-wine",
+                           data={"image": (BytesIO(b"not an image"), "label.heic")},
+                           content_type="multipart/form-data")
+        assert resp.status_code == 400
+        assert json.loads(resp.data)["error"] == "unsupported_image"

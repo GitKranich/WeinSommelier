@@ -202,7 +202,7 @@ def _ssl_verify():
         return True
 
 
-APP_VERSION = "1.12.4"
+APP_VERSION = "1.12.5"
 
 HA_OPTIONS = load_options()
 
@@ -752,7 +752,8 @@ def _downscale_bytes(file_storage):
     """Read an uploaded image, resize in memory, return (base64_str, media_type)."""
     import base64
     from io import BytesIO
-    ext = file_storage.filename.rsplit(".", 1)[1].lower()
+    name = file_storage.filename or ""
+    ext = name.rsplit(".", 1)[1].lower() if "." in name else ""
     media_type = {"jpg": "image/jpeg", "jpeg": "image/jpeg",
                   "png": "image/png", "webp": "image/webp",
                   "gif": "image/gif"}.get(ext, "image/jpeg")
@@ -781,14 +782,32 @@ def _downscale_bytes(file_storage):
 
 
 def save_image(file):
-    if file and file.filename and allowed(file.filename):
+    if not file:
+        return None
+    if file.filename and allowed(file.filename):
         ext = file.filename.rsplit(".", 1)[1].lower()
         fname = f"{uuid.uuid4().hex}.{ext}"
         path = os.path.join(UPLOAD_DIR, fname)
         file.save(path)
         _downscale(path)
         return fname
-    return None
+    # Unknown or missing extension (e.g. iPhone HEIC, or a phone app that
+    # passes the photo without a file name): accept it if Pillow can read
+    # it and store it as JPEG.
+    try:
+        from PIL import Image, ImageOps
+        file.stream.seek(0)
+        with Image.open(file.stream) as img:
+            img = ImageOps.exif_transpose(img).convert("RGB")
+            fname = f"{uuid.uuid4().hex}.jpg"
+            path = os.path.join(UPLOAD_DIR, fname)
+            img.save(path, "JPEG", quality=85, optimize=True)
+        _downscale(path)
+        return fname
+    except Exception as e:
+        app.logger.warning("Rejected upload %r (%s): %s",
+                           file.filename, file.mimetype, e)
+        return None
 
 
 # ── Routes ────────────────────────────────────────────────────────────────────
@@ -1935,13 +1954,15 @@ def analyze_wine():
         return jsonify({"ok": False, "error": "no_api_key"}), 400
 
     file = request.files.get("image")
-    if not file or not file.filename:
+    if not file:
+        app.logger.warning("analyze-wine: request without image")
         return jsonify({"ok": False, "error": "no_image"}), 400
 
     # Save image first (persisted even if API fails)
     image_filename = save_image(file)
     if not image_filename:
-        return jsonify({"ok": False, "error": "no_image"}), 400
+        return jsonify({"ok": False, "error": "unsupported_image",
+                        "message": f"Bildformat nicht unterstützt ({file.mimetype or file.filename})"}), 400
 
     # Read saved file as base64
     image_path = os.path.join(UPLOAD_DIR, image_filename)

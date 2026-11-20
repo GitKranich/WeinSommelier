@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.12.5 (WeinSommelier)
+
+- **Fix: Etikettfotos vom Handy wurden teils abgelehnt** - Fotos ohne Dateiendung (wie sie manche Handy-Apps liefern) oder in anderen Formaten wie HEIC wurden stillschweigend verworfen. Fotos werden jetzt vor dem Hochladen auf dem Handy in ein JPEG (max. 2000 px) umgewandelt - das ist auch deutlich schneller über Mobilfunk - und der Server erkennt Bilder am Inhalt statt an der Endung.
+- **Genauere Fehlermeldung** - schlägt die Analyse fehl, steht unter der Meldung jetzt der Grund (z. B. Bildformat, Zeitüberschreitung, HTTP-Status).
+
 ## 1.12.4 (WeinSommelier)
 
 - **Fix: Sommelier-Chat und Etikett-Erkennung mit neuen Claude-Modellen** - neuere Claude-Modelle (z. B. Sonnet 5.5) liefern vor der Antwort einen Denk-Block. Bisher wurde nur der erste Block gelesen, was zu "'ThinkingBlock' object has no attribute 'text'" führte. Jetzt werden nur die Textblöcke ausgewertet; das Token-Limit wurde angehoben, damit das Denken die Antwort nicht abschneidet.
