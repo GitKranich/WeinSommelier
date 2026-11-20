@@ -544,3 +544,30 @@ class TestAddonConfigSchema:
         defaults = set(wine_app.load_options())
         assert defaults <= self._config_block("options")
         assert defaults <= self._config_block("schema")
+
+
+
+class TestAnthropicText:
+    """Responses may start with thinking blocks (newer Claude models)."""
+
+    def _msg(self, blocks, stop_reason="end_turn"):
+        from types import SimpleNamespace as NS
+        return NS(content=[NS(**b) for b in blocks], stop_reason=stop_reason)
+
+    def test_skips_thinking_block(self):
+        import app as wine_app
+        msg = self._msg([{"type": "thinking", "thinking": "hmm"},
+                         {"type": "text", "text": "Hallo"}])
+        assert wine_app._anthropic_text(msg) == "Hallo"
+
+    def test_joins_multiple_text_blocks(self):
+        import app as wine_app
+        msg = self._msg([{"type": "text", "text": "A"}, {"type": "text", "text": "B"}])
+        assert wine_app._anthropic_text(msg) == "AB"
+
+    def test_no_text_raises(self):
+        import pytest
+        import app as wine_app
+        msg = self._msg([{"type": "thinking", "thinking": "x"}], stop_reason="max_tokens")
+        with pytest.raises(RuntimeError, match="max_tokens"):
+            wine_app._anthropic_text(msg)

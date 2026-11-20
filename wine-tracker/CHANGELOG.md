@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.12.4 (WeinSommelier)
+
+- **Fix: Sommelier-Chat und Etikett-Erkennung mit neuen Claude-Modellen** - neuere Claude-Modelle (z. B. Sonnet 5.5) liefern vor der Antwort einen Denk-Block. Bisher wurde nur der erste Block gelesen, was zu "'ThinkingBlock' object has no attribute 'text'" führte. Jetzt werden nur die Textblöcke ausgewertet; das Token-Limit wurde angehoben, damit das Denken die Antwort nicht abschneidet.
+
 ## 1.12.3 (WeinSommelier)
 
 - **Trinkfenster von grapeminds richtig umgerechnet** - grapeminds liefert die Trinkreife oft als "Jahre nach der Ernte" (z. B. 6-18). Diese Angabe wird jetzt mit dem Jahrgang in Jahreszahlen umgerechnet (Jahrgang 2019 -> 2025-2037). Ist der Jahrgang noch unbekannt, bleibt das Feld leer und füllt sich automatisch, sobald du ihn einträgst.

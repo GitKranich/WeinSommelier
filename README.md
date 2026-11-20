@@ -22,7 +22,7 @@ und eine kombinierte Suche aus KI-Etikettenerkennung, grapeminds und Vivino.
 </p>
 
 <p align="center">
-  <img src="https://img.shields.io/badge/version-v1.12.3-blue.svg" alt="version">
+  <img src="https://img.shields.io/badge/version-v1.12.4-blue.svg" alt="version">
   <img src="https://img.shields.io/badge/license-MIT-green.svg" alt="license">
   <img src="https://img.shields.io/badge/Home%20Assistant-Add--on-41BDF5.svg?logo=homeassistant&logoColor=white" alt="home assistant add-on">
   <img src="https://img.shields.io/badge/Docker-standalone-2496ED.svg?logo=docker&logoColor=white" alt="docker">

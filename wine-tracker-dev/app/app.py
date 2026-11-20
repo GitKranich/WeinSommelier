@@ -202,7 +202,7 @@ def _ssl_verify():
         return True
 
 
-APP_VERSION = "1.12.3"
+APP_VERSION = "1.12.4"
 
 HA_OPTIONS = load_options()
 
@@ -1608,6 +1608,21 @@ def uploaded_file(filename):
 
 # ── AI Provider Functions ─────────────────────────────────────────────────────
 
+def _anthropic_text(message):
+    """Join the text blocks of an Anthropic response.
+
+    Newer Claude models can return thinking blocks before the answer, so
+    the first content block is not necessarily text.
+    """
+    parts = [getattr(b, "text", "") for b in (message.content or [])
+             if getattr(b, "type", None) == "text"]
+    text = "".join(parts).strip()
+    if not text:
+        reason = getattr(message, "stop_reason", None)
+        raise RuntimeError(f"Anthropic response contained no text (stop_reason={reason})")
+    return text
+
+
 def _call_anthropic(image_b64, media_type, prompt, opts):
     """Call Anthropic Claude API (vision or text-only)."""
     import anthropic
@@ -1620,10 +1635,10 @@ def _call_anthropic(image_b64, media_type, prompt, opts):
     content.append({"type": "text", "text": prompt})
     message = client.messages.create(
         model=model,
-        max_tokens=1024,
+        max_tokens=4096,
         messages=[{"role": "user", "content": content}],
     )
-    return message.content[0].text
+    return _anthropic_text(message)
 
 
 def _call_openai(image_b64, media_type, prompt, opts):
@@ -1736,11 +1751,11 @@ def _call_chat_anthropic(messages, system_prompt, opts, image_b64=None, media_ty
             ]}]
     message = client.messages.create(
         model=model,
-        max_tokens=2048,
+        max_tokens=8192,
         system=system_prompt,
         messages=messages,
     )
-    return message.content[0].text
+    return _anthropic_text(message)
 
 
 def _call_chat_openai(messages, system_prompt, opts, image_b64=None, media_type=None):
